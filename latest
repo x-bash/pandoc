@@ -13,6 +13,7 @@ ___x_cmd_pandoc(){
 }
 
 # Section: staticbin
+# xrc static-build/staticbin
 ___x_cmd_staticbin_init(){
     local funcname="${1:?Provide function name}"
     shift 1
