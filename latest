@@ -3,38 +3,11 @@
 # author:       Li Junhao           l@x-cmd.com
 # license:      GPLv3
 
-#  https://github.com/jgm/pandoc/releases/download/2.17.0.1/pandoc-2.17.0.1-macOS.zip
-#  https://github.com.cnpmjs.org/jgm/pandoc/releases/download/2.17.0.1/pandoc-2.17.0.1-macOS.zip
-#  TODO: provide gitcode
-
 ___x_cmd_pandoc(){
     ___x_cmd_pandoc_bin_init ___x_cmd_pandoc && ___x_cmd_pandoc "$@"
 }
 
-___x_cmd_pandoc_bin_download(){
-    local p
-    if ! p="$(___x_cmd_pandoc_bin_download_url_path)"; then
-        return 1
-    fi
-    local cache
-    cache="$(___x_cmd_pandoc_bin_default)"
-    p="$(___x_cmd_pandoc_bin_download_url_host)${p}"
-    if ! ___x_cmd_httpget "$p" "$cache"; then
-        printf "Download failed: %s\n" "$p" >&2
-        return 1
-    fi
-    printf "%s\n" "$cache"
-}
-
-___x_cmd_pandoc_bin_which(){
-    local bin
-    bin="$(___x_cmd_pandoc_bin_default)"
-    [ -f "$bin" ] || \
-        bin="$(command -v pandoc 2>/dev/null)" || \
-        bin="$(___x_cmd_pandoc_bin_download)" || return 1
-    printf "%s\n" bin
-}
-
+# Section: init
 ___x_cmd_pandoc_bin_init(){
     local bin
     if ! bin="$(___x_cmd_pandoc_which)"; then
@@ -51,7 +24,36 @@ ___x_cmd_pandoc_bin_init(){
     "
 }
 
+___x_cmd_pandoc_bin_which(){
+    local bin
+    bin="$(___x_cmd_pandoc_bin_default)"
+    [ -f "$bin" ] || \
+        bin="$(command -v pandoc 2>/dev/null)" || \
+        bin="$(___x_cmd_pandoc_bin_download)" || return 1
+    printf "%s\n" bin
+}
+
+___x_cmd_pandoc_bin_download(){
+    local p
+    if ! p="$(___x_cmd_pandoc_bin_download_url_path)"; then
+        return 1
+    fi
+    local cache
+    cache="$(___x_cmd_pandoc_bin_default)"
+    p="$(___x_cmd_pandoc_bin_download_url_host)${p}"
+    if ! ___x_cmd_httpget "$p" "$cache"; then
+        printf "Download failed: %s\n" "$p" >&2
+        return 1
+    fi
+    printf "%s\n" "$cache"
+}
+# EndSection
+
 # Section: detail
+
+#  https://github.com/jgm/pandoc/releases/download/2.17.0.1/pandoc-2.17.0.1-macOS.zip
+#  https://github.com.cnpmjs.org/jgm/pandoc/releases/download/2.17.0.1/pandoc-2.17.0.1-macOS.zip
+#  TODO: provide gitcode
 
 ___x_cmd_pandoc_bin_default(){
     printf "%s" "$___X_CMD_ROOT/.bin/pandoc"
@@ -85,7 +87,6 @@ ___x_cmd_pandoc_bin_download_url_path(){
             return 1
     esac
 }
-
 
 # EndSection
 
