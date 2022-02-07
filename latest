@@ -15,15 +15,10 @@ ___x_cmd_pandoc(){
 # Section: staticbin
 ___x_cmd_staticbin_init(){
     local funcname="${1:?Provide function name}"
-    local cachebin="${2:?Provide local bin name}"
-    local sysbin="${3:?Provide local bin name}"
-    local fun_url="${4:?candidate url generator}"
+    shift 1
 
     local bin
-    if ! bin="$(___x_cmd_staticbin_which "$cachebin" "$sysbin" "$fun_url" )"; then
-        printf "%s\n" "Cannot find executable file." >&2
-        return 1
-    fi
+    bin="$(___x_cmd_staticbin_which "$1" "$2" "$3")" || return 1
 
     eval "
     $funcname(){
@@ -33,17 +28,10 @@ ___x_cmd_staticbin_init(){
 }
 
 ___x_cmd_staticbin_run(){
-    local cachebin="${1:?Provide default cache bin}"
-    local sysbin="${2:?Sysbin name}"
-    local fun_url="${3:?candidate url generator}"
-    shift 3
-
     local bin
-    if ! bin="$(___x_cmd_staticbin_which "$cachebin" "$sysbin" "$fun_url" )"; then
-        printf "%s\n" "Cannot find executable file." >&2
-        return 1
-    fi
+    bin="$(___x_cmd_staticbin_which "$1" "$2" "$3")" || return 1
 
+    shift 3
     "$bin" "$@"
 }
 
@@ -55,6 +43,9 @@ ___x_cmd_staticbin_which(){
     [ -f "$cachebin" ] && printf "%s\n" "$cachebin" && return
     command -v "$sysbin" 2>/dev/null || return
     ___x_cmd_staticbin_download "$cachebin" "$fun_url" && printf "%s\n" "$cachebin" && return
+
+    printf "%s\n" "Cannot find executable file." >&2
+    return 1
 }
 
 ___x_cmd_staticbin_download(){
