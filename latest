@@ -68,7 +68,8 @@ ___x_cmd_pandoc_bin_download_url_host(){
 }
 
 ___x_cmd_pandoc_bin_download_url_path(){
-    local sys="$(os rname)-$(os-arch)"
+    local sys
+    sys="$(os rname)-$(os-arch)"
     case "$sys" in
         Darwin-*)
             printf "%s" "2.17.0.1/pandoc-2.17.0.1-macOS.zip"
