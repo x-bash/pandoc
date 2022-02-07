@@ -8,8 +8,7 @@ ___x_cmd_pandoc(){
         ___x_cmd_pandoc \
         "$___X_CMD_ROOT/.bin/pandoc" \
         pandoc \
-        ___x_cmd_pandoc_bin_download_url_host \
-        ___x_cmd_pandoc_bin_download_url_path \
+        ___x_cmd_pandoc_bin_download_url \
         && ___x_cmd_pandoc "$@"
 }
 
@@ -18,11 +17,10 @@ ___x_cmd_staticbin_init(){
     local funcname="${1:?Provide function name}"
     local cachebin="${2:?Provide local bin name}"
     local sysbin="${3:?Provide local bin name}"
-    local f_host="${4:?version fun}"
-    local f_path="${5:?version fun}"
+    local fun_url="${4:?candidate url generator}"
 
     local bin
-    if ! bin="$(___x_cmd_staticbin_which "$cachebin" "$sysbin" "$f_host" "$f_path" )"; then
+    if ! bin="$(___x_cmd_staticbin_which "$cachebin" "$sysbin" "$fun_url" )"; then
         printf "%s\n" "Cannot find executable file." >&2
         return 1
     fi
@@ -34,41 +32,50 @@ ___x_cmd_staticbin_init(){
     "
 }
 
+___x_cmd_staticbin_run(){
+    local cachebin="${1:?Provide default cache bin}"
+    local sysbin="${2:?Sysbin name}"
+    local fun_url="${3:?candidate url generator}"
+    shift 3
+
+    local bin
+    if ! bin="$(___x_cmd_staticbin_which "$cachebin" "$sysbin" "$fun_url" )"; then
+        printf "%s\n" "Cannot find executable file." >&2
+        return 1
+    fi
+
+    "$bin" "$@"
+}
+
 ___x_cmd_staticbin_which(){
     local cachebin="${1:?Provide default cache bin}"
     local sysbin="${2:?Sysbin name}"
-    local f_host="${3:?version fun}"
-    local f_path="${4:?version fun}"
+    local fun_url="${3:?candidate url generator}"
 
     [ -f "$cachebin" ] && printf "%s\n" "$cachebin" && return
     command -v "$sysbin" 2>/dev/null || return
-    ___x_cmd_staticbin_download "$cachebin" "$f_host" "$f_path" && printf "%s\n" "$cachebin" && return
+    ___x_cmd_staticbin_download "$cachebin" "$fun_url" && printf "%s\n" "$cachebin" && return
 }
 
-# 1. cachebin
-# 2. SubPath Provider
-# 3. Root Provider
 ___x_cmd_staticbin_download(){
     local cache="${1:?Provide path}"
-    local f_host="${2:?version fun}"
-    local f_path="${3:?version fun}"
-
-    local p
-    if ! p="$($f_path)"; then
-        return 1
-    fi
+    local fun_url="${2:?Candidate url generator}"
 
     local IFS="
 "
 
-    local line
-    $f_host | while read -r line; do
-        url="${line%/}/${p}"
-        if ! ___x_cmd_httpget "$url" "$cache"; then
-            printf "Download failed: %s\n" "$url" >&2
-            return 1
+    local result
+    if ! result="$(
+        $fun_url | while read -r url; do
+        if ___x_cmd_httpget "$url" "$cache"; then
+            return 0
+        else
+            printf "%s\n" "$url"
         fi
     done
+    )"; then
+        printf "Failed to download from:\n%s\n" "$result"
+    fi
 
 }
 # EndSection
@@ -79,38 +86,33 @@ ___x_cmd_staticbin_download(){
 #  https://github.com.cnpmjs.org/jgm/pandoc/releases/download/2.17.0.1/pandoc-2.17.0.1-macOS.zip
 #  TODO: provide gitcode
 
-___x_cmd_pandoc_bin_default(){
-    printf "%s" "$___X_CMD_ROOT/.bin/pandoc"
-}
-
-___x_cmd_pandoc_bin_download_url_host(){
-    if "$___X_CMD_WHICHNET"; then
-        printf "%s" "https://github.com/jgm/pandoc/releases/download/"
-    else
-        printf "%s" "https://github.com.cnpmjs.org/jgm/pandoc/releases/download/"
-    fi
-}
-
-___x_cmd_pandoc_bin_download_url_path(){
+___x_cmd_pandoc_bin_download_url(){
     local sys
     sys="$(os rname)-$(os-arch)"
+    local p
     case "$sys" in
         Darwin-*)
-            printf "%s" "2.17.0.1/pandoc-2.17.0.1-macOS.zip"
+            p="2.17.0.1/pandoc-2.17.0.1-macOS.zip"
             ;;
         win-*)
-            printf "%s" "2.17.0.1/pandoc-2.17.1.1-windows-x86_64.zip"
+            p="2.17.0.1/pandoc-2.17.1.1-windows-x86_64.zip"
             ;;
         linux-amd64)
-            printf "%s" "2.17.0.1/pandoc-2.17.1.1-linux-amd64.tar.gz"
+            p="2.17.0.1/pandoc-2.17.1.1-linux-amd64.tar.gz"
             ;;
         linux-arm64)
-            printf "%s" "2.17.0.1/pandoc-2.17.1.1-linux-arm64.tar.gz"
+            p="2.17.0.1/pandoc-2.17.1.1-linux-arm64.tar.gz"
             ;;
         *)
             printf "System Not Supported: %s\n" "$sys" >&2
             return 1
     esac
+
+    if "$___X_CMD_WHICHNET"; then
+        printf "%s/%s" "https://github.com/jgm/pandoc/releases/download" "$p"
+    else
+        printf "%s/%s" "https://github.com.cnpmjs.org/jgm/pandoc/releases/download" "$p"
+    fi
 }
 
 # EndSection
