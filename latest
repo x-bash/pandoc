@@ -7,47 +7,8 @@
 #  https://github.com.cnpmjs.org/jgm/pandoc/releases/download/2.17.0.1/pandoc-2.17.0.1-macOS.zip
 #  TODO: provide gitcode
 
-
-# if [ -z "$___X_CMD_PANDOC_BIN" ]; then
-#     if ! ___X_CMD_PANDOC_BIN="$(command -v pandoc 2>/dev/null)"; then
-
-#     fi
-# fi
-
-# x first
-# system second
-
-___x_cmd_pandoc_bin_default(){
-    printf "%s" "$___X_CMD_ROOT/.bin/pandoc"
-}
-
-___x_cmd_pandoc_bin_download_url_path(){
-    local sys="$(os rname)-$(os-arch)"
-    case "$sys" in
-        Darwin-*)
-            printf "%s" "2.17.0.1/pandoc-2.17.0.1-macOS.zip"
-            ;;
-        win-*)
-            printf "%s" "2.17.0.1/pandoc-2.17.1.1-windows-x86_64.zip"
-            ;;
-        linux-amd64)
-            printf "%s" "2.17.0.1/pandoc-2.17.1.1-linux-amd64.tar.gz"
-            ;;
-        linux-arm64)
-            printf "%s" "2.17.0.1/pandoc-2.17.1.1-linux-arm64.tar.gz"
-            ;;
-        *)
-            printf "System Not Supported: %s\n" "$sys" >&2
-            return 1
-    esac
-}
-
-___x_cmd_pandoc_bin_download_url_host(){
-    if "$___X_CMD_WHICHNET"; then
-        printf "%s" "https://github.com/jgm/pandoc/releases/download/"
-    else
-        printf "%s" "https://github.com.cnpmjs.org/jgm/pandoc/releases/download/"
-    fi
+___x_cmd_pandoc(){
+    ___x_cmd_pandoc_bin_init ___x_cmd_pandoc && ___x_cmd_pandoc "$@"
 }
 
 ___x_cmd_pandoc_bin_download(){
@@ -90,8 +51,42 @@ ___x_cmd_pandoc_bin_init(){
     "
 }
 
-___x_cmd_pandoc(){
-    ___x_cmd_pandoc_bin_init ___x_cmd_pandoc && ___x_cmd_pandoc "$@"
+# Section: detail
+
+___x_cmd_pandoc_bin_default(){
+    printf "%s" "$___X_CMD_ROOT/.bin/pandoc"
 }
+
+___x_cmd_pandoc_bin_download_url_host(){
+    if "$___X_CMD_WHICHNET"; then
+        printf "%s" "https://github.com/jgm/pandoc/releases/download/"
+    else
+        printf "%s" "https://github.com.cnpmjs.org/jgm/pandoc/releases/download/"
+    fi
+}
+
+___x_cmd_pandoc_bin_download_url_path(){
+    local sys="$(os rname)-$(os-arch)"
+    case "$sys" in
+        Darwin-*)
+            printf "%s" "2.17.0.1/pandoc-2.17.0.1-macOS.zip"
+            ;;
+        win-*)
+            printf "%s" "2.17.0.1/pandoc-2.17.1.1-windows-x86_64.zip"
+            ;;
+        linux-amd64)
+            printf "%s" "2.17.0.1/pandoc-2.17.1.1-linux-amd64.tar.gz"
+            ;;
+        linux-arm64)
+            printf "%s" "2.17.0.1/pandoc-2.17.1.1-linux-arm64.tar.gz"
+            ;;
+        *)
+            printf "System Not Supported: %s\n" "$sys" >&2
+            return 1
+    esac
+}
+
+
+# EndSection
 
 xrc setmain ___x_cmd_pandoc
