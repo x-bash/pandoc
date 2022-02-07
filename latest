@@ -4,18 +4,21 @@
 # license:      GPLv3
 
 ___x_cmd_pandoc(){
-    ___x_cmd_pandoc_bin_init ___x_cmd_pandoc && ___x_cmd_pandoc "$@"
+    ___x_cmd_staticbin_init ___x_cmd_pandoc_which ___x_cmd_pandoc && ___x_cmd_pandoc "$@"
 }
 
 # Section: init
-___x_cmd_pandoc_bin_init(){
+___x_cmd_staticbin_init(){
+    local funcname="${1:?Provide function name}"
+    local cachebin="${2:?Provide local bin name}"
+    local sysbin="${2:?Provide local bin name}"
+    local downloader="${3:?Provide exe name}"
+
     local bin
-    if ! bin="$(___x_cmd_pandoc_which)"; then
-        printf "%s\n" "Cannot find local pandoc or install pandoc." >&2
+    if ! bin="$(___x_cmd_staticbin_which "$cachebin" "$sysbin" "$downloader")"; then
+        printf "%s\n" "Cannot find executable file." >&2
         return 1
     fi
-
-    local funcname="${1:?Provide function name}"
 
     eval "
     $funcname(){
@@ -24,28 +27,30 @@ ___x_cmd_pandoc_bin_init(){
     "
 }
 
-___x_cmd_pandoc_bin_which(){
-    local bin
-    bin="$(___x_cmd_pandoc_bin_default)"
-    [ -f "$bin" ] || \
-        bin="$(command -v pandoc 2>/dev/null)" || \
-        bin="$(___x_cmd_pandoc_bin_download)" || return 1
-    printf "%s\n" bin
+___x_cmd_staticbin_which(){
+    local cachebin="${1:?Provide default cache bin}"
+    local sysbin="${2:?Sysbin name}"
+    local downloader="${3:?Downloader}"
+
+    [ -f "$cachebin" ] && printf "%s\n" "$cachebin" && return
+    command -v "$sysbin" 2>/dev/null || return
+    "$downloader" "$cachebin" && printf "%s\n" "$cachebin" && return
 }
 
+# 1. Version provider
+# 2. Platform Provider
+# 3. Root Provider
 ___x_cmd_pandoc_bin_download(){
+    local cache="${1:?Provide path}"
     local p
     if ! p="$(___x_cmd_pandoc_bin_download_url_path)"; then
         return 1
     fi
-    local cache
-    cache="$(___x_cmd_pandoc_bin_default)"
     p="$(___x_cmd_pandoc_bin_download_url_host)${p}"
     if ! ___x_cmd_httpget "$p" "$cache"; then
         printf "Download failed: %s\n" "$p" >&2
         return 1
     fi
-    printf "%s\n" "$cache"
 }
 # EndSection
 
