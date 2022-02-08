@@ -10,7 +10,7 @@ ___x_cmd_pandoc(){
         ___x_cmd_pandoc \
         "$___X_CMD_ROOT/.bin/pandoc" \
         pandoc \
-        ___x_cmd_pandoc_bin_download_url \
+        "$(___x_cmd_pandoc_bin_download_url)" \
         && ___x_cmd_pandoc "$@"
 }
 
